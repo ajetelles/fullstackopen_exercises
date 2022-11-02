@@ -14,13 +14,46 @@ const Button = ({text, onClick}) => {
   )
 }
 
-const Statistics = ({good, neutral, bad}) => {
+const StatisticLine = ({name, stat}) => {
+  if (name === "positive") {
+    return (
+      <tr>
+        <td>{name}</td>
+        <td>{stat}%</td>
+      </tr>
+    )
+  }
   return (
-    <>
-      <p>good {good}</p>
-      <p>neutral {neutral}</p>
-      <p>bad {bad}</p>
-    </>
+    <tr>
+      <td>{name}</td>
+      <td>{stat}</td>
+    </tr>
+  )
+}
+
+const Statistics = ({good, neutral, bad}) => {
+  let all = good + neutral + bad
+  let average = Math.round((good - bad) / all * 100) / 100
+  let positive = Math.round(good / all * 100) / 100
+
+  if (all === 0){
+    return (
+      <>
+        <p>No feedback given</p>
+      </>
+    )
+  }
+  return (
+    <table>
+      <tbody>
+        <StatisticLine name="good" stat={good}/>
+        <StatisticLine name="neutral" stat={neutral}/>
+        <StatisticLine name="bad" stat={bad}/>
+        <StatisticLine name="all" stat={all}/>
+        <StatisticLine name="average" stat={average}/>
+        <StatisticLine name="positive" stat={positive}/>
+      </tbody>
+    </table>
   )
 }
 
