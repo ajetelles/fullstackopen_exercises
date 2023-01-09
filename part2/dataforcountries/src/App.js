@@ -17,6 +17,7 @@ const App = (props) => {
       })
   }
   useEffect(hook, [])
+
   console.log(countries.length, 'countries in server')
 
   const countriesToShow = showCountry
@@ -45,6 +46,7 @@ const App = (props) => {
       <Country
         countries={countriesToShow}
         numbercountry={countriesToShow.length}
+        setFilter={setFilter}
       />
       {console.log("test")}
     </div>
