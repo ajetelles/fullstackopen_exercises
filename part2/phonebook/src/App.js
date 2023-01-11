@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react'
 import Person from './components/Person'
 import Filter from './components/Filter'
 import PersonForm from './components/PersonForm'
-import axios from 'axios'
+import Notification from './components/Notification'
+import phoneService from './services/persons'
+import './index.css'
 
 const App = () => {
   const [persons, setPersons] = useState([])
@@ -10,18 +12,16 @@ const App = () => {
   const [newNumber, setNewNumber] = useState('')
   const [newFilter, setFilter] = useState('')
   const [showFiltered, setShowFiltered] = useState(false)
+  const [message, setMessage] = useState({content: null, type: 'notification'})
   //const [personsToShow, setPersonsToShow] = useState([...persons])
 
-  const hook = () => {
-    console.log('effect')
-    axios
-      .get('http://localhost:3001/persons')
-      .then(response => {
-        console.log('promise fulfilled')
-        setPersons(response.data)
+  useEffect(() => {
+    phoneService
+      .getAll()
+      .then(initialPersons => {
+        setPersons(initialPersons)
       })
-  }
-  useEffect(hook, [])
+  }, [])
   console.log('render', persons.length, 'persons')
 
   const personsToShow = showFiltered
@@ -34,18 +34,48 @@ const App = () => {
     const personObject = {
       name: newName,
       number: newNumber,
-      id: persons.length + 1
+      // id: persons.length + 1
     }
 
     if (persons.some(person => person.name === newName)) {
-      // if person is already in phonebook, send alert
-      alert(`${newName} is already added to phonebook`)
+      // if person is already in phonebook, 
+      // ask if they want to change the number
+      //alert(`${newName} is already added to phonebook`)
+      const personToUpdate = persons.find(p => p.name === newName)
+      if(window.confirm(`${newName} is already added to phonebook, replace the old number with a new one?`)) {
+        const updatedContact = { ...personToUpdate, number: newNumber}
+        phoneService
+          .create(personToUpdate.id, updatedContact)
+          .then(() => {
+            setPersons(persons.map(person => person.name !== newName ? person : updatedContact))
+            setNewName('')
+            setNewNumber('')
+          })
+        setMessage({
+          content: `Updated number for ${newName}`,
+          type: 'notification'
+        })
+        setTimeout(()=>{
+          setMessage({content:null, type:'notification'})
+        }, 5000)
+      }
     } else {
       // create a person object by copying the text box contents (newName) 
       // and append it to the persons list
-      setPersons(persons.concat(personObject)) 
-      setNewName('') // empty the textbox
-      setNewNumber('') 
+      phoneService
+        .create(personObject)
+        .then(returnedPerson => {
+          setPersons(persons.concat(returnedPerson))
+          setNewName('')
+          setNewNumber('')
+        })
+      setMessage({
+         content: `Added ${newName}`,
+         type: 'notification'
+       })
+       setTimeout(()=>{
+         setMessage({content:null, type:'notification'})
+       }, 5000)
     }
   }
 
@@ -65,11 +95,43 @@ const App = () => {
     console.log(showFiltered)
   }
 
+  const deletePerson = id => {
+    console.log(`delete ${id}`)
+    const personToDelete = persons.find(p => p.id === id)
+    if(window.confirm(`Delete ${personToDelete.name}?`)) {
+      console.log('deleted')
+      phoneService
+        .remove(id)
+        .then(success => {
+          setMessage({
+            content: success,
+            type: 'notification'
+          })
+          setTimeout(()=>{
+            setMessage({content:null, type:'notification'})
+          }, 5000)
+        })
+        .catch(() => {
+          setMessage({
+            content: `Information of ${personToDelete.name} has already been removed from server`,
+            type: 'error'
+          })
+          setTimeout(()=>{
+            setMessage({content:null, type:'notification'})
+          }, 5000)
+        })
+      // document.location.reload() // just to re-render
+    } else {
+      console.log('not deleted')
+    }
+  }
+
   console.log(personsToShow)
 
   return (
     <div>
       <h2>Phonebook</h2>
+      <Notification message={message.content} type={message.type} />
       <Filter
         value={newFilter}
         onChange={handleFilter}
@@ -83,7 +145,7 @@ const App = () => {
       />
       <h2>Numbers</h2>
       {personsToShow.map(person => 
-          <Person key={person.name} person={person} />
+          <Person key={person.name} person={person} deletePerson={deletePerson}/>
       )}
     </div>
   )
