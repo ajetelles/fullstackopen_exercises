@@ -50,11 +50,14 @@ const App = () => {
             setPersons(persons.map(person => person.name !== newName ? person : updatedContact))
             setNewName('')
             setNewNumber('')
+            setMessage({
+              content: `Updated number for ${newName}`,
+              type: 'notification'
+            })
           })
-        setMessage({
-          content: `Updated number for ${newName}`,
-          type: 'notification'
-        })
+          .catch(error => {
+            setMessage({content: error.response.data.error, type: 'error'})
+          })
         setTimeout(()=>{
           setMessage({content:null, type:'notification'})
         }, 5000)
@@ -68,11 +71,14 @@ const App = () => {
           setPersons(persons.concat(returnedPerson))
           setNewName('')
           setNewNumber('')
+          setMessage({
+            content: `Added ${newName}`,
+            type: 'notification'
+          })
         })
-      setMessage({
-         content: `Added ${newName}`,
-         type: 'notification'
-       })
+        .catch(error => {
+          setMessage({content: error.response.data.error, type: 'error'})
+        })
        setTimeout(()=>{
          setMessage({content:null, type:'notification'})
        }, 5000)

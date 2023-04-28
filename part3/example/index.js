@@ -3,11 +3,14 @@
 const { response } = require('express')
 const express = require('express')
 const cors = require('cors')
+const morgan = require('morgan')
 const app = express()
 
-app.use(cors)
+app.use(cors())
 app.use(express.json())
-
+morgan.token('requestdata', (req, res) => JSON.stringify(req.body))
+app.use(morgan(':method :url :status :res[content-length] - :response-time ms :requestdata', 
+{ stream: process.stdout }))
 
 let notes = [
     {

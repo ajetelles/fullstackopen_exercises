@@ -27,6 +27,7 @@ const App = (props) => {
       .getAll()
       .then(initialNotes => {
         setNotes(initialNotes) 
+        setErrorMessage(null)
       })
   },[])
   console.log('render', notes.length, 'notes')
